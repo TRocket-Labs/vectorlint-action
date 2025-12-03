@@ -35,7 +35,7 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Run VectorLint
-        uses: ayo6706/vectorlint-test-action@v1
+        uses: TRocket-Labs/vectorlint-action@v1
         with:
           gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
 ```
@@ -71,7 +71,7 @@ jobs:
 ### Strict Mode
 
 ```yaml
-- uses: ayo6706/vectorlint-test-action@v1
+- uses: TRocket-Labs/vectorlint-action@v1
   with:
     gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
     fail_on_error: true
@@ -81,7 +81,7 @@ jobs:
 ### Advisory Mode
 
 ```yaml
-- uses: ayo6706/vectorlint-test-action@v1
+- uses: TRocket-Labs/vectorlint-action@v1
   with:
     gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
     fail_on_error: false
@@ -91,7 +91,7 @@ jobs:
 ### Pin to Specific Version
 
 ```yaml
-- uses: ayo6706/vectorlint-test-action@v1
+- uses: TRocket-Labs/vectorlint-action@v1
   with:
     gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
     vectorlint_version: 'v1.0.0'  # Pin to specific vectorlint version
