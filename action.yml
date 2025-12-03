@@ -1,0 +1,198 @@
+# VectorLint GitHub Action
+# 
+# Installation Options:
+# - Option 1 (Current): Installs from GitHub (TRocket-Labs/vectorlint@ft/reviewdog)
+# - Option 2 (Future): Install from npm when published
+#   To switch: Comment Option 1, uncomment Option 2 in "Install VectorLint" and "Run vectorlint" steps
+
+name: 'VectorLint'
+description: 'AI-powered content linting for Markdown files using LLMs (OpenAI, Anthropic, Gemini)'
+author: 'TRocket Labs'
+
+inputs:
+  github_token:
+    description: 'GitHub token for reviewdog'
+    required: false
+    default: ${{ github.token }}
+  
+  gemini_api_key:
+    description: 'Google Gemini API key'
+    required: false
+  
+  openai_api_key:
+    description: 'OpenAI API key'
+    required: false
+  
+  anthropic_api_key:
+    description: 'Anthropic API key'
+    required: false
+  
+  reporter:
+    description: 'Reporter type (github-pr-check, github-pr-review, github-check)'
+    required: false
+    default: 'github-pr-check'
+  
+  filter_mode:
+    description: 'Filter mode (added, diff_context, file, nofilter)'
+    required: false
+    default: 'added'
+  
+  fail_on_error:
+    description: 'Fail if errors are found'
+    required: false
+    default: 'true'
+  
+  vectorlint_flags:
+    description: 'Additional flags to pass to vectorlint'
+    required: false
+    default: ''
+  
+  llm_provider:
+    description: 'LLM provider (openai, anthropic, gemini, azure-openai)'
+    required: false
+    default: 'anthropic'
+
+  vectorlint_version:
+    description: 'VectorLint version to use (branch, tag, or commit SHA)'
+    required: false
+    default: 'ft/reviewdog'
+  
+  # API Keys for additional providers
+  perplexity_api_key:
+    description: 'Perplexity API key for search functionality'
+    required: false
+  
+  # Model Configuration
+  openai_model:
+    description: 'OpenAI model to use (e.g., gpt-4, gpt-3.5-turbo)'
+    required: false
+  
+  anthropic_model:
+    description: 'Anthropic model to use (e.g., claude-3-opus-20240229)'
+    required: false
+  
+  gemini_model:
+    description: 'Gemini model to use'
+    required: false
+  
+  azure_openai_model:
+    description: 'Azure OpenAI model deployment name'
+    required: false
+  
+  # Temperature Configuration
+  openai_temperature:
+    description: 'Temperature setting for OpenAI (0.0-2.0)'
+    required: false
+  
+  anthropic_temperature:
+    description: 'Temperature setting for Anthropic (0.0-1.0)'
+    required: false
+  
+  gemini_temperature:
+    description: 'Temperature setting for Gemini (0.0-2.0)'
+    required: false
+  
+  azure_openai_temperature:
+    description: 'Temperature setting for Azure OpenAI (0.0-2.0)'
+    required: false
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    
+    - name: Setup reviewdog
+      uses: reviewdog/action-setup@v1
+      with:
+        reviewdog_version: latest
+    
+    - name: Install VectorLint
+      shell: bash
+      run: |
+        # Option 1: Install from GitHub (current)
+        git clone -b ${{ inputs.vectorlint_version }} --depth=1 https://github.com/TRocket-Labs/vectorlint.git /tmp/vectorlint
+        cd /tmp/vectorlint
+        npm ci
+        npm run build
+        
+        # Option 2: Install from npm (uncomment when published)
+        # npm install -g vectorlint@latest
+    
+    - name: Run VectorLint with reviewdog
+      shell: bash
+      env:
+        LLM_PROVIDER: ${{ inputs.llm_provider }}
+        REVIEWDOG_GITHUB_API_TOKEN: ${{ inputs.github_token }}
+        OPENAI_API_KEY: ${{ inputs.openai_api_key }}
+        ANTHROPIC_API_KEY: ${{ inputs.anthropic_api_key }}
+        GEMINI_API_KEY: ${{ inputs.gemini_api_key }}
+        PERPLEXITY_API_KEY: ${{ inputs.perplexity_api_key }}
+        OPENAI_MODEL: ${{ inputs.openai_model }}
+        ANTHROPIC_MODEL: ${{ inputs.anthropic_model }}
+        GEMINI_MODEL: ${{ inputs.gemini_model }}
+        AZURE_OPENAI_MODEL: ${{ inputs.azure_openai_model }}
+        OPENAI_TEMPERATURE: ${{ inputs.openai_temperature }}
+        ANTHROPIC_TEMPERATURE: ${{ inputs.anthropic_temperature }}
+        GEMINI_TEMPERATURE: ${{ inputs.gemini_temperature }}
+        AZURE_OPENAI_TEMPERATURE: ${{ inputs.azure_openai_temperature }}
+      run: |
+        set -e
+        
+        # Determine target files (only changed .md files for PRs)
+        TARGET_FILES="."
+        if [ -n "${{ github.base_ref }}" ]; then
+          echo "Detected PR, calculating changed files against ${{ github.base_ref }}..."
+          git fetch origin ${{ github.base_ref }} --depth=1
+          CHANGED=$(git diff --name-only origin/${{ github.base_ref }} HEAD | grep '\.md$' || true)
+          
+          if [ -z "$CHANGED" ]; then
+            echo "No markdown files changed in this PR. Skipping analysis."
+            echo '{"source": {"name": "vectorlint", "url": "https://github.com/TRocket-Labs/vectorlint"}, "diagnostics": []}' > vectorlint_result.json
+            exit 0
+          fi
+          
+          TARGET_FILES=$(echo "$CHANGED" | tr '\n' ' ')
+          echo "Scanning changed files: $TARGET_FILES"
+        fi
+        
+        # Run vectorlint
+        # Option 1: From GitHub clone (current)
+        echo "[DEBUG] Running vectorlint with output file: vectorlint_result.json"
+        node /tmp/vectorlint/dist/index.js \
+          --output rdjson \
+          --output-file vectorlint_result.json \
+          ${{ inputs.vectorlint_flags }} \
+          $TARGET_FILES || true
+        
+        # Option 2: From npm (uncomment when published)
+        # vectorlint \
+        #   --output rdjson \
+        #   --output-file vectorlint_result.json \
+        #   ${{ inputs.vectorlint_flags }} \
+        #   $TARGET_FILES || true
+        
+        # Verify the output file was created
+        echo "[DEBUG] Checking if vectorlint_result.json was created..."
+        if [ ! -f vectorlint_result.json ]; then
+          echo "[ERROR] vectorlint_result.json was not created!"
+          echo "[DEBUG] Creating empty RDJSON file as fallback..."
+          echo '{"source": {"name": "vectorlint", "url": "https://github.com/TRocket-Labs/vectorlint"}, "diagnostics": []}' > vectorlint_result.json
+        else
+          echo "[DEBUG] File exists. Size: $(wc -c < vectorlint_result.json) bytes"
+          echo "[DEBUG] Content preview:"
+          head -n 20 vectorlint_result.json
+        fi
+        
+        # Pipe to reviewdog
+        cat vectorlint_result.json | reviewdog -f=rdjson \
+          -name="vectorlint" \
+          -reporter=${{ inputs.reporter }} \
+          -filter-mode=${{ inputs.filter_mode }} \
+          -fail-on-error=${{ inputs.fail_on_error }}
+
+branding:
+  icon: 'check-circle'
+  color: 'blue'
