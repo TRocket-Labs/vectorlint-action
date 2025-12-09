@@ -1,9 +1,7 @@
 # VectorLint GitHub Action
 # 
-# Installation Options:
-# - Option 1 (Current): Installs from GitHub (TRocket-Labs/vectorlint@ft/reviewdog)
-# - Option 2 (Future): Install from npm when published
-#   To switch: Comment Option 1, uncomment Option 2 in "Install VectorLint" and "Run vectorlint" steps
+# Reusable GitHub Action for running VectorLint on your repository.
+# Installs VectorLint from npm and integrates with reviewdog for PR comments.
 
 name: 'VectorLint'
 description: 'AI-powered content linting for Markdown files using LLMs (OpenAI, Anthropic, Gemini)'
@@ -53,9 +51,9 @@ inputs:
     default: 'anthropic'
 
   vectorlint_version:
-    description: 'VectorLint version to use (branch, tag, or commit SHA)'
+    description: 'VectorLint version to install from npm (e.g., latest, 2.0.1)'
     required: false
-    default: 'ft/reviewdog'
+    default: 'latest'
   
   # API Keys for additional providers
   perplexity_api_key:
@@ -112,14 +110,7 @@ runs:
     - name: Install VectorLint
       shell: bash
       run: |
-        # Option 1: Install from GitHub (current)
-        git clone -b ${{ inputs.vectorlint_version }} --depth=1 https://github.com/TRocket-Labs/vectorlint.git /tmp/vectorlint
-        cd /tmp/vectorlint
-        npm ci
-        npm run build
-        
-        # Option 2: Install from npm (uncomment when published)
-        # npm install -g vectorlint@latest
+        npm install -g vectorlint@${{ inputs.vectorlint_version }}
     
     - name: Run VectorLint with reviewdog
       shell: bash
@@ -159,20 +150,12 @@ runs:
         fi
         
         # Run vectorlint
-        # Option 1: From GitHub clone (current)
         echo "[DEBUG] Running vectorlint with output file: vectorlint_result.json"
-        node /tmp/vectorlint/dist/index.js \
+        vectorlint \
           --output rdjson \
           --output-file vectorlint_result.json \
           ${{ inputs.vectorlint_flags }} \
           $TARGET_FILES || true
-        
-        # Option 2: From npm (uncomment when published)
-        # vectorlint \
-        #   --output rdjson \
-        #   --output-file vectorlint_result.json \
-        #   ${{ inputs.vectorlint_flags }} \
-        #   $TARGET_FILES || true
         
         # Verify the output file was created
         echo "[DEBUG] Checking if vectorlint_result.json was created..."
