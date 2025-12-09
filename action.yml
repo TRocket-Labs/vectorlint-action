@@ -150,7 +150,6 @@ runs:
           
           if [ -z "$CHANGED" ]; then
             echo "No markdown files changed in this PR. Skipping analysis."
-            echo '{"source": {"name": "vectorlint", "url": "https://github.com/TRocket-Labs/vectorlint"}, "diagnostics": []}' > vectorlint_result.json
             exit 0
           fi
           
@@ -158,40 +157,27 @@ runs:
           echo "Scanning changed files: $TARGET_FILES"
         fi
         
-        # Run vectorlint
+        # Run vectorlint and pipe stdout directly to reviewdog (like Vale does)
         # Option 1: From GitHub clone (current)
-        echo "[DEBUG] Running vectorlint with output file: vectorlint_result.json"
+        echo "[DEBUG] Running vectorlint with stdout piped to reviewdog"
         node /tmp/vectorlint/dist/index.js \
           --output rdjson \
-          --output-file vectorlint_result.json \
           ${{ inputs.vectorlint_flags }} \
-          $TARGET_FILES || true
-        
-        # Option 2: From npm (uncomment when published)
-        # vectorlint \
-        #   --output rdjson \
-        #   --output-file vectorlint_result.json \
-        #   ${{ inputs.vectorlint_flags }} \
-        #   $TARGET_FILES || true
-        
-        # Verify the output file was created
-        echo "[DEBUG] Checking if vectorlint_result.json was created..."
-        if [ ! -f vectorlint_result.json ]; then
-          echo "[ERROR] vectorlint_result.json was not created!"
-          echo "[DEBUG] Creating empty RDJSON file as fallback..."
-          echo '{"source": {"name": "vectorlint", "url": "https://github.com/TRocket-Labs/vectorlint"}, "diagnostics": []}' > vectorlint_result.json
-        else
-          echo "[DEBUG] File exists. Size: $(wc -c < vectorlint_result.json) bytes"
-          echo "[DEBUG] Content preview:"
-          head -n 20 vectorlint_result.json
-        fi
-        
-        # Pipe to reviewdog
-        cat vectorlint_result.json | reviewdog -f=rdjson \
+          $TARGET_FILES 2>&1 | reviewdog -f=rdjson \
           -name="vectorlint" \
           -reporter=${{ inputs.reporter }} \
           -filter-mode=${{ inputs.filter_mode }} \
           -fail-on-error=${{ inputs.fail_on_error }}
+        
+        # Option 2: From npm (uncomment when published)
+        # vectorlint \
+        #   --output rdjson \
+        #   ${{ inputs.vectorlint_flags }} \
+        #   $TARGET_FILES 2>&1 | reviewdog -f=rdjson \
+        #   -name="vectorlint" \
+        #   -reporter=${{ inputs.reporter }} \
+        #   -filter-mode=${{ inputs.filter_mode }} \
+        #   -fail-on-error=${{ inputs.fail_on_error }}
 
 branding:
   icon: 'check-circle'
