@@ -1,7 +1,9 @@
 # VectorLint GitHub Action
 # 
-# Reusable GitHub Action for running VectorLint on your repository.
-# Installs VectorLint from npm and integrates with reviewdog for PR comments.
+# Installation Options:
+# - Option 1 (Current): Installs from GitHub (TRocket-Labs/vectorlint@ft/reviewdog)
+# - Option 2 (Future): Install from npm when published
+#   To switch: Comment Option 1, uncomment Option 2 in "Install VectorLint" and "Run vectorlint" steps
 
 name: 'VectorLint'
 description: 'AI-powered content linting for Markdown files using LLMs (OpenAI, Anthropic, Gemini)'
@@ -110,11 +112,14 @@ runs:
     - name: Install VectorLint
       shell: bash
       run: |
+        # Option 1: Install from GitHub (current)
         git clone -b ${{ inputs.vectorlint_version }} --depth=1 https://github.com/TRocket-Labs/vectorlint.git /tmp/vectorlint
         cd /tmp/vectorlint
         npm ci
         npm run build
-        npm install -g .
+        
+        # Option 2: Install from npm (uncomment when published)
+        # npm install -g vectorlint@latest
     
     - name: Run VectorLint with reviewdog
       shell: bash
@@ -153,26 +158,35 @@ runs:
           echo "Scanning changed files: $TARGET_FILES"
         fi
         
-        # Run vectorlint using shell redirection to capture stdout
-        # Stderr (logs/errors) will still show in the GitHub Action log
-        echo "[DEBUG] Running vectorlint..."
-        vectorlint \
+        # Run vectorlint
+        # Option 1: From GitHub clone (current)
+        echo "[DEBUG] Running vectorlint with output file: vectorlint_result.json"
+        node /tmp/vectorlint/dist/index.js \
           --output rdjson \
+          --output-file vectorlint_result.json \
           ${{ inputs.vectorlint_flags }} \
-          $TARGET_FILES > vectorlint_result.json || true
+          $TARGET_FILES || true
         
-        # Verify the output file
-        if [ ! -s vectorlint_result.json ]; then
-            echo "[ERROR] vectorlint_result.json is empty or missing!"
-            # Create a fallback empty JSON to prevent reviewdog failure
-            echo '{"source": {"name": "vectorlint", "url": "https://github.com/TRocket-Labs/vectorlint"}, "diagnostics": []}' > vectorlint_result.json
+        # Option 2: From npm (uncomment when published)
+        # vectorlint \
+        #   --output rdjson \
+        #   --output-file vectorlint_result.json \
+        #   ${{ inputs.vectorlint_flags }} \
+        #   $TARGET_FILES || true
+        
+        # Verify the output file was created
+        echo "[DEBUG] Checking if vectorlint_result.json was created..."
+        if [ ! -f vectorlint_result.json ]; then
+          echo "[ERROR] vectorlint_result.json was not created!"
+          echo "[DEBUG] Creating empty RDJSON file as fallback..."
+          echo '{"source": {"name": "vectorlint", "url": "https://github.com/TRocket-Labs/vectorlint"}, "diagnostics": []}' > vectorlint_result.json
         else
-            echo "[DEBUG] Output generated. Size: $(wc -c < vectorlint_result.json) bytes"
-            # Optional: print first few characters to verify it looks like JSON
-            echo "[DEBUG] Start of content: $(head -c 50 vectorlint_result.json)..."
+          echo "[DEBUG] File exists. Size: $(wc -c < vectorlint_result.json) bytes"
+          echo "[DEBUG] Content preview:"
+          head -n 20 vectorlint_result.json
         fi
-
-        # Pass to reviewdog
+        
+        # Pipe to reviewdog
         cat vectorlint_result.json | reviewdog -f=rdjson \
           -name="vectorlint" \
           -reporter=${{ inputs.reporter }} \
