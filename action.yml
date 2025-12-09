@@ -159,7 +159,7 @@ runs:
         vectorlint \
           --output rdjson \
           ${{ inputs.vectorlint_flags }} \
-          $TARGET_FILES > vectorlint_result.json
+          $TARGET_FILES > vectorlint_result.json || true
         
         # Verify the output file
         if [ ! -s vectorlint_result.json ]; then
