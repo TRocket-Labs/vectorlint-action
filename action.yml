@@ -149,12 +149,27 @@ runs:
           echo "Scanning changed files: $TARGET_FILES"
         fi
         
-        # Run vectorlint and pipe stdout directly to reviewdog
-        # VectorLint outputs clean RDJSON to stdout (no logs) when using --output rdjson
+        # Run vectorlint using shell redirection to capture stdout
+        # Stderr (logs/errors) will still show in the GitHub Action log
+        echo "[DEBUG] Running vectorlint..."
         vectorlint \
           --output rdjson \
           ${{ inputs.vectorlint_flags }} \
-          $TARGET_FILES 2>/dev/null | reviewdog -f=rdjson \
+          $TARGET_FILES > vectorlint_result.json
+        
+        # Verify the output file
+        if [ ! -s vectorlint_result.json ]; then
+            echo "[ERROR] vectorlint_result.json is empty or missing!"
+            # Create a fallback empty JSON to prevent reviewdog failure
+            echo '{"source": {"name": "vectorlint", "url": "https://github.com/TRocket-Labs/vectorlint"}, "diagnostics": []}' > vectorlint_result.json
+        else
+            echo "[DEBUG] Output generated. Size: $(wc -c < vectorlint_result.json) bytes"
+            # Optional: print first few characters to verify it looks like JSON
+            echo "[DEBUG] Start of content: $(head -c 50 vectorlint_result.json)..."
+        fi
+
+        # Pass to reviewdog
+        cat vectorlint_result.json | reviewdog -f=rdjson \
           -name="vectorlint" \
           -reporter=${{ inputs.reporter }} \
           -filter-mode=${{ inputs.filter_mode }} \
