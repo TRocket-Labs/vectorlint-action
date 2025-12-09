@@ -163,7 +163,7 @@ runs:
         node /tmp/vectorlint/dist/index.js \
           --output rdjson \
           ${{ inputs.vectorlint_flags }} \
-          $TARGET_FILES 2>&1 | reviewdog -f=rdjson \
+          $TARGET_FILES | reviewdog -f=rdjson \
           -name="vectorlint" \
           -reporter=${{ inputs.reporter }} \
           -filter-mode=${{ inputs.filter_mode }} \
