@@ -1,9 +1,7 @@
 # VectorLint GitHub Action
 # 
-# Installation Options:
-# - Option 1 (Current): Installs from GitHub (TRocket-Labs/vectorlint@ft/reviewdog)
-# - Option 2 (Future): Install from npm when published
-#   To switch: Comment Option 1, uncomment Option 2 in "Install VectorLint" and "Run vectorlint" steps
+# AI-powered content linting for Markdown files using LLMs.
+# Uses the vectorlint npm package: https://www.npmjs.com/package/vectorlint
 
 name: 'VectorLint'
 description: 'AI-powered content linting for Markdown files using LLMs (OpenAI, Anthropic, Gemini)'
@@ -53,9 +51,9 @@ inputs:
     default: 'anthropic'
 
   vectorlint_version:
-    description: 'VectorLint version to use (branch, tag, or commit SHA)'
+    description: 'VectorLint npm package version (e.g., latest, 1.0.0)'
     required: false
-    default: 'ft/reviewdog'
+    default: 'latest'
   
   # Azure OpenAI Configuration
   azure_openai_api_key:
@@ -132,15 +130,7 @@ runs:
     
     - name: Install VectorLint
       shell: bash
-      run: |
-        # Option 1: Install from GitHub (current)
-        git clone -b ${{ inputs.vectorlint_version }} --depth=1 https://github.com/TRocket-Labs/vectorlint.git /tmp/vectorlint
-        cd /tmp/vectorlint
-        npm ci
-        npm run build
-        
-        # Option 2: Install from npm (uncomment when published)
-        # npm install -g vectorlint@latest
+      run: npm install -g vectorlint@${{ inputs.vectorlint_version }}
     
     - name: Run VectorLint with reviewdog
       shell: bash
@@ -183,10 +173,8 @@ runs:
           echo "Scanning changed files: $TARGET_FILES"
         fi
         
-        # Run vectorlint and pipe stdout directly to reviewdog (like Vale does)
-        # Option 1: From GitHub clone (current)
-        echo "[DEBUG] Running vectorlint with stdout piped to reviewdog"
-        node /tmp/vectorlint/dist/index.js \
+        # Run vectorlint and pipe stdout to reviewdog
+        vectorlint \
           --output rdjson \
           ${{ inputs.vectorlint_flags }} \
           $TARGET_FILES | reviewdog -f=rdjson \
@@ -194,16 +182,6 @@ runs:
           -reporter=${{ inputs.reporter }} \
           -filter-mode=${{ inputs.filter_mode }} \
           -fail-on-error=${{ inputs.fail_on_error }}
-        
-        # Option 2: From npm (uncomment when published)
-        # vectorlint \
-        #   --output rdjson \
-        #   ${{ inputs.vectorlint_flags }} \
-        #   $TARGET_FILES 2>&1 | reviewdog -f=rdjson \
-        #   -name="vectorlint" \
-        #   -reporter=${{ inputs.reporter }} \
-        #   -filter-mode=${{ inputs.filter_mode }} \
-        #   -fail-on-error=${{ inputs.fail_on_error }}
 
 branding:
   icon: 'check-circle'

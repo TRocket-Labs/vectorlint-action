@@ -1,6 +1,6 @@
 # VectorLint GitHub Action
 
-A GitHub Action wrapper for [VectorLint](https://github.com/TRocket-Labs/vectorlint) - AI-powered content linting for Markdown files.
+A GitHub Action wrapper for [VectorLint](https://www.npmjs.com/package/vectorlint) - AI-powered content linting for Markdown files.
 
 ## Features
 
@@ -8,7 +8,7 @@ A GitHub Action wrapper for [VectorLint](https://github.com/TRocket-Labs/vectorl
 - 📝 Inline code annotations on PRs via reviewdog
 - ✅ GitHub Checks integration
 - 🎯 Configurable severity levels
-- 🔍 Multiple LLM providers (OpenAI, Anthropic, Gemini)
+- 🔍 Multiple LLM providers (OpenAI, Anthropic, Gemini, Azure OpenAI)
 
 ## Usage
 
@@ -47,11 +47,12 @@ jobs:
 | `gemini_api_key` | Google Gemini API key | One of the API keys | - |
 | `openai_api_key` | OpenAI API key | One of the API keys | - |
 | `anthropic_api_key` | Anthropic API key | One of the API keys | - |
+| `llm_provider` | LLM provider to use | No | `anthropic` |
 | `reporter` | Reporter type | No | `github-pr-check` |
 | `filter_mode` | Filter mode | No | `added` |
 | `fail_on_error` | Fail if errors found | No | `true` |
 | `vectorlint_flags` | Additional flags | No | `''` |
-| `vectorlint_version` | VectorLint version (branch/tag) | No | `main` |
+| `vectorlint_version` | npm package version | No | `latest` |
 
 ### Reporter Types
 
@@ -94,13 +95,13 @@ jobs:
 - uses: TRocket-Labs/vectorlint-action@v1
   with:
     gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
-    vectorlint_version: 'v1.0.0'  # Pin to specific vectorlint version
+    vectorlint_version: '1.0.0'  # Pin to specific npm version
 ```
 
 ## How It Works
 
 This action:
-1. Installs [VectorLint](https://github.com/TRocket-Labs/vectorlint) from GitHub
+1. Installs [VectorLint](https://www.npmjs.com/package/vectorlint) from npm
 2. Runs it on changed Markdown files
 3. Pipes results to [reviewdog](https://github.com/reviewdog/reviewdog) for PR annotations
 
