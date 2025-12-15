@@ -1,0 +1,27 @@
+{
+    "name": "vectorlint-action",
+    "version": "1.0.0",
+    "description": "AI-powered content linting for Markdown files using LLMs.",
+    "main": "dist/index.js",
+    "scripts": {
+        "build": "npx ncc build src/main.ts -o dist --license licenses.txt"
+    },
+    "keywords": [
+        "actions",
+        "node",
+        "setup"
+    ],
+    "author": "TRocket Labs",
+    "license": "MIT",
+    "dependencies": {
+        "@actions/core": "^1.10.0",
+        "@actions/exec": "^1.1.1",
+        "@actions/io": "^1.1.3",
+        "@actions/tool-cache": "^2.0.1"
+    },
+    "devDependencies": {
+        "@types/node": "^20.0.0",
+        "@vercel/ncc": "^0.38.0",
+        "typescript": "^5.0.0"
+    }
+}
