@@ -28,16 +28,31 @@ permissions:
   pull-requests: write
   checks: write
 
+concurrency:
+  group: vectorlint-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Run VectorLint
         uses: TRocket-Labs/vectorlint-action@v1
         with:
-          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          llm_provider: ${{ secrets.LLM_PROVIDER }}
+          # OpenAI
+          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+          openai_model: ${{ secrets.OPENAI_MODEL }}
+          openai_temperature: ${{ secrets.OPENAI_TEMPERATURE }}
+          # Perplexity
+          perplexity_api_key: ${{ secrets.PERPLEXITY_API_KEY }}
+          # Reviewdog options
+          reporter: github-pr-check
+          filter_mode: added
+          fail_on_error: false
+       
 ```
 
 ### Configuration Options
