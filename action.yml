@@ -4,7 +4,7 @@
 # Uses the vectorlint npm package: https://www.npmjs.com/package/vectorlint
 
 name: 'VectorLint'
-description: 'VectorLint is a command-line tool that evaluates and scores content using LLMs. It uses LLM-as-a-Judge to catch content quality issues that typically require human judgement.'
+description: 'AI-powered content linting using LLM-as-a-Judge to catch quality issues that require human judgement.'
 author: 'TRocket Labs'
 
 inputs:
