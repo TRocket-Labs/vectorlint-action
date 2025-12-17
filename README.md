@@ -1,14 +1,7 @@
 # VectorLint GitHub Action
 
-A GitHub Action wrapper for [VectorLint](https://www.npmjs.com/package/vectorlint) - AI-powered content linting for Markdown files.
+A GitHub Action wrapper for [VectorLint](https://www.npmjs.com/package/vectorlint) - A command-line tool that evaluates and scores content using LLMs. It uses [LLM-as-a-Judge](https://en.wikipedia.org/wiki/LLM-as-a-Judge) to catch content quality issues that typically require human judgement.
 
-## Features
-
-- 🤖 AI-powered content analysis using LLMs
-- 📝 Inline code annotations on PRs via reviewdog
-- ✅ GitHub Checks integration
-- 🎯 Configurable severity levels
-- 🔍 Multiple LLM providers (OpenAI, Anthropic, Gemini, Azure OpenAI)
 
 ## Usage
 
@@ -83,10 +76,10 @@ jobs:
 
 | Input | Description | Example Values |
 |-------|-------------|----------------|
-| `openai_model` | OpenAI model to use | `gpt-4`, `gpt-4-turbo`, `gpt-3.5-turbo` |
-| `anthropic_model` | Anthropic model to use | `claude-3-opus-20240229`, `claude-3-sonnet-20240229` |
+| `openai_model` | OpenAI model to use | `gpt-4`, `gpt-4-turbo`, `gpt-4o` |
+| `anthropic_model` | Anthropic model to use | `claude-sonnet-4-20250514`, `claude-3-sonnet-20240229` |
 | `anthropic_max_tokens` | Max tokens for Anthropic responses | `4096` |
-| `gemini_model` | Gemini model to use | `gemini-2.5-pro`, `gemini-1.5-pro` |
+| `gemini_model` | Gemini model to use | `gemini-2.5-pro`, `gemini-3-pro` |
 | `azure_openai_model` | Azure OpenAI deployment name | Your deployment name |
 
 ### Temperature Settings
